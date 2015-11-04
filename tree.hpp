@@ -5,23 +5,16 @@
 #include <list>
 #include <vector>
 
-#include <4u/la/vec.hpp>
-#include <4u/util/op.hpp>
+#include <la/vec.hpp>
+#include "op.hpp"
 
-#ifdef __TREE_DEBUG
-#include <iostream>
-#include <4u/la/mat.hpp>
-#include <graphics/graphics.h>
-#include <media/log.h>
-#endif
-
-struct TreeKey
+struct QuadTreeKey
 {
 public:
 	vec2 position;
 	double size;
-	TreeKey() {}
-	TreeKey(const vec2 &p, double s) : position(p), size(s) {}
+	QuadTreeKey() {}
+	QuadTreeKey(const vec2 &p, double s) : position(p), size(s) {}
 	bool isSuitableDown(const TreeKey &k) const
 	{
 		vec2 rel = k.position - position;
@@ -34,10 +27,10 @@ public:
 };
 
 template <typename T>
-class Tree
+class QuadTree
 {
 public:
-	typedef TreeKey Key;
+	typedef QuadTreeKey Key;
 	
 private:
 	class Branch
@@ -280,23 +273,6 @@ private:
 			}
 		}
 	}
-
-#ifdef __TREE_DEBUG
-	static void _draw(Branch *b)
-	{
-		gTranslate(fvec2(b->key.position).data);
-		gTransform(fmat2(b->key.size,0,0,b->key.size).data);
-		if(b->elements.size() > 0)
-		{
-			gSetColorInt(G_GREEN & G_ALPHA(0.1));
-		}
-		else
-		{
-			gSetColorInt(G_GREEN & G_ALPHA(0.05));
-		}
-		gDrawQuad();
-	}
-#endif
 	
 	static void __insert(Branch *b, const Key &key, T elem)
 	{
@@ -314,7 +290,7 @@ private:
 	}
 	
 public:
-	Tree(const Key &key, int d)
+	QuadTree(const Key &key, int d)
 	  : depth(d)
 	{
 		root.key = key;
@@ -322,7 +298,7 @@ public:
 		__find_neighbours(&root,&root);
 	}
 
-	~Tree()
+	~QuadTree()
 	{
 		__destroy_tree(&root);
 	}
@@ -429,22 +405,4 @@ public:
 			insert(p.first,p.second);
 		}
 	}
-	
-#ifdef __TREE_DEBUG
-	void _draw_filled()
-	{
-		__call_all(&root,_draw);
-	}
-	void _draw_nearest(const TreeKey &key)
-	{
-		__call_nearest(&root,key,_draw);
-	}
-	void _draw_neighbours(const TreeKey &key)
-	{
-		Branch *b = __find_branch(&root,key);
-		_draw(b);
-		__call_neighbours(b,_draw);
-	}
-
-#endif
 };
